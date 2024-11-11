@@ -16,7 +16,8 @@ class ArticleRepository extends ServiceEntityRepository
         parent::__construct($registry, Article::class);
     }
 
-    public function searchArticles(String $name)
+    // Unsecured sql statement
+    public function searchArticles(String $name): array
     {
         $sql = "SELECT title, description FROM article WHERE title = '" . $name . "'";
         $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
