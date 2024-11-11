@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+    {% for article in articles %}
+        {{ article|join(', ') }}
+    {% else %}
+        Aucune correspondance
+    {% endfor %}
+{% endblock %}
