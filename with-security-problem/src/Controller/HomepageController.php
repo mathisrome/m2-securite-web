@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Article;
 use App\Form\Type\ArticleType;
+use App\Form\Type\SearchType;
+use App\Repository\ArticleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -63,6 +65,27 @@ class HomepageController extends AbstractController
         return $this->render('homepage/index.html.twig', [
             'article' => $article,
             "form" => $form,
+        ]);
+    }
+
+    #[Route('/search', name: 'search')]
+    public function search(
+        Request $request,
+        ArticleRepository $articleRepository,
+    ): Response
+    {
+        $form = $this->createForm(SearchType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $articles = $articleRepository->searchArticles($form->getData()['name']);
+            return $this->render('homepage/list.html.twig', [
+                'articles' => $articles,
+            ]);
+        }
+
+        return $this->render('homepage/search.html.twig', [
+            'form' => $form,
         ]);
     }
 }
