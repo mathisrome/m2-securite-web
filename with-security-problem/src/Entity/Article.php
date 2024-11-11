@@ -20,6 +20,12 @@ class Article
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $imageFilename = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $originalImageFilename = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -45,6 +51,30 @@ class Article
     public function setDescription(string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getImageFilename(): ?string
+    {
+        return $this->imageFilename;
+    }
+
+    public function setImageFilename(string $imageFilename): static
+    {
+        $this->imageFilename = $imageFilename;
+
+        return $this;
+    }
+
+    public function getOriginalImageFilename(): ?string
+    {
+        return $this->originalImageFilename;
+    }
+
+    public function setOriginalImageFilename(string $originalImageFilename): static
+    {
+        $this->originalImageFilename = $originalImageFilename;
 
         return $this;
     }

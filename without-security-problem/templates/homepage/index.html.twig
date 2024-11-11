@@ -6,8 +6,8 @@
     {{ form(form) }}
 
     {% if article %}
+        <img src="{{ asset("uploads/images/" ~ article.imageFilename) }}" alt="">
         <h1>{{ article.title }}</h1>
-
         {{ article.description|raw }}
     {% endif %}
 {% endblock %}

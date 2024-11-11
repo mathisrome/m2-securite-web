@@ -5,6 +5,9 @@
 {% block body %}
     {{ form(form) }}
 
-    <h1>{{ article.title }}</h1>
-    {{ article.description|raw }}
+    {% if article %}
+        <img src="{{ asset("uploads/images/" ~ article.imageFilename) }}" alt="">
+        <h1>{{ article.title }}</h1>
+        {{ article.description|raw }}
+    {% endif %}
 {% endblock %}
