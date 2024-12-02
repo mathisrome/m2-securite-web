@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+    Choississez une commande à exécuter parmis la liste suivante:
+    <ul>
+        <li>Calcul des ventes: <b>php bin/console app:total</b></li>
+        <li>Recalcul du stock disponible: <b>php bin/console app:refresh</b></li>
+    </ul>
+    {{ form(form) }}
+
+    {% if output is not null %}
+        {{ output }}
+    {% endif %}
+{% endblock %}
