@@ -30,7 +30,7 @@ class HomepageController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $articles = $articleRepository->searchArticles($form->getData()['name']);
+            $articles = $articleRepository->searchArticles($form->getData()['title']);
         } else {
             $articles = $em->getRepository(Article::class)->findByUser($this->getUser());
         }
