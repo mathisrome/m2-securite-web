@@ -26,6 +26,10 @@ class Article
     #[ORM\Column(length: 255)]
     private ?string $originalImageFilename = null;
 
+    #[ORM\ManyToOne(inversedBy: 'articles')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $user = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -75,6 +79,18 @@ class Article
     public function setOriginalImageFilename(string $originalImageFilename): static
     {
         $this->originalImageFilename = $originalImageFilename;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
 
         return $this;
     }
