@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Article;
 use App\Form\Type\ArticleType;
+use App\Form\Type\CommandType;
 use App\Form\Type\SearchType;
 use App\Repository\ArticleRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,6 +38,24 @@ class HomepageController extends AbstractController
         return $this->render('homepage/index.html.twig', [
             'form' => $form,
             'articles' => $articles,
+        ]);
+    }
+
+    #[Route('/commande', name: 'commande')]
+    public function commande(Request $request): Response
+    {
+        $form = $this->createForm(CommandType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $commande = $form->getData()['commande'];
+
+            dd($commande);
+        }
+
+        return $this->render('homepage/command.html.twig', [
+            'form' => $form,
+            'output' => $output ?? null,
         ]);
     }
 }
