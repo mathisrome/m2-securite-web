@@ -1,5 +1,9 @@
 # m2-securite-web
 
+Membre du groupe :
+- SOMVEILLE Quentin
+- ROME Mathis
+
 Dans ce projet vous trouverez les dossiers suivants :
 - vulnerable (qui contient l'application avec les failles de sécurité)
 - secure (qui contient l'application avec toutes les failles de sécurité corrigées)
