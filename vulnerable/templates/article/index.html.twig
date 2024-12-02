@@ -4,8 +4,8 @@
 
 {% block body %}
     <main class="container pt-5">
-        {{ form_start(form) }}
-        {{ form_end(form) }}
+        <a href="{{ path("articles_create") }}" class="btn btn-primary mb-3">Create article</a>
+
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -24,7 +24,8 @@
                         <td>{{ article.originalImageFilename }}</td>
                         <td>
                             <div class="btn-group">
-                                <a class="btn btn-warning" href="{{ path("articles_detail", {'id': article.id}) }}">See</a>
+                                <a class="btn btn-dark" href="{{ path("articles_edit", {'id': article.id}) }}">Edit</a>
+                                <a class="btn btn-warning" href="{{ path("articles_detail", {'id': article.id}) }}">Detail</a>
                             </div>
                         </td>
                     </tr>

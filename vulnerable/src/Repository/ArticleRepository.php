@@ -19,7 +19,7 @@ class ArticleRepository extends ServiceEntityRepository
     // Unsecured sql statement
     public function searchArticles(String $name): array
     {
-        $sql = "SELECT title, description FROM article WHERE title = '" . $name . "'";
+        $sql = "SELECT id, title, description, original_image_filename as originalImageFilename FROM article WHERE title LIKE '%" . $name . "%' ";
         $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
         $result = $stmt->executeQuery();
         return $result->fetchAllAssociative();

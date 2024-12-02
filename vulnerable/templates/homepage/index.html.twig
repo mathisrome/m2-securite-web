@@ -3,11 +3,34 @@
 {% block title %}{% endblock %}
 
 {% block body %}
-    {{ form(form) }}
-
-    {% if article %}
-        <img src="{{ asset("uploads/images/" ~ article.imageFilename) }}" alt="">
-        <h1>{{ article.title }}</h1>
-        {{ article.description|raw }}
-    {% endif %}
+    <main class="container pt-5">
+        {{ form_start(form) }}
+        {{ form_end(form) }}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Filename</th>
+                    <th scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for article in articles %}
+                    <tr>
+                        <th scope="row">{{ article.id }}</th>
+                        <td>{{ article.title }}</td>
+                        <td>{{ article.originalImageFilename }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a class="btn btn-warning" href="{{ path("articles_detail", {'id': article.id}) }}">See</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
 {% endblock %}
