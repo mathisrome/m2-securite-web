@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+    Choississez une commande à exécuter parmis la liste suivante:
+    {{ form(form) }}
+
+    {% if output is not null %}
+        {{ output }}
+    {% endif %}
+{% endblock %}
