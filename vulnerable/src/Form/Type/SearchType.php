@@ -14,12 +14,13 @@ class SearchType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
-                'label' => 'Nom d\'article',
-                'required' => true,
+                'label' => 'Search',
+                'required' => false,
             ])
-            ->add('submit',SubmitType::class, [
-                'label' => 'Rechercher',
-            ])
+            ->add(
+                'submit',
+                SubmitType::class
+            )
         ;
     }
 

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+    <main class="container pt-5">
+        {% if article.imageFilename %}
+            <img src="{{ asset("uploads/images/" ~ article.imageFilename) }}" class="img-thumbnail" alt="Image de l'article" style="max-width: 300px">
+
+        {% endif %}
+        <h1 class="mt-3">{{ article.title }}</h1>
+
+        <article>
+            {{ article.description|raw }}
+
+        </article>
+    </main>
+{% endblock %}
