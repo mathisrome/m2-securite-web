@@ -32,13 +32,67 @@ Dans ce projet vous trouverez les failles suivantes :
 - [Brute Force](#brute-force) 
 - [Command Injection](#command-injection)
 
+Pour reproduire les failles vous devez être connecté !
+
+Vous pouvez créer un compte sur chaque application via les liens suivants :
+- [localhost:80/register](http://localhost:80/register)
+- [localhost:81/register](http://localhost:81/register)
 
 ### Brute Force
+### Command Injection
 ### XSS
+L'application est vulnérable à l'injection XSS dans la création/édition d'un article.
+
+Pour créer un article dirigez-vous sur le lien suivant : [localhost:80/articles/create](http://localhost:80/articles/create)
+
+Dans le champ `description` vous pouvez insérer n'importe quel balise HTML.
+
+Voici un exemple en ajoutant du code javascript :
+![img.png](images/xss/xss_vulnerable_1.png)
+
+Une fois qu'on se sur la visualisation de l'article nous avons l'alerte suivante qui apparaît :
+![img.png](images/xss/xss_vulnerable_2.png)
+
+Voici le code associé à la faille XSS :
+
+```php
+$form->add(
+    'description',
+    TextareaType::class,
+    [
+        "label" => "Description",
+    ]
+)
+```
+
+Ce code correspond au champ `description` et celui-ci ne possède pas l'option qui permet
+de `sanitize` le contenu mis dans le champ.
+
+Voici le bout de code qui corrige le problème :
+
+```php
+$form->add(
+    'description',
+    TextareaType::class,
+    [
+        "label" => "Description",
+        "sanitize_html" => true
+    ]
+)
+```
+
+L'option `sanitize_html` permet de vérifier le contenu du champ et supprime le contenu non souhaité, tel que les balises `<scrip></script>` en HTML.
+
+Vous trouverez ci-dessous l'exemple du correctif.
+
+1. Création d'un article ![img.png](images/xss/xss_secure_1.png)
+2. Édition de l'article pour voir le contenu du champ ![img.png](images/xss/xss_secure_2.png)
+3. Rendu de l'article ![img.png](images/xss/xss_secure_3.png)
+
 ### File Upload
 ### SQLI
 L'application est vulnérable à l'injection SQL dans sa fonctionnalité de "Recherche" des articles: 
-![img.png](images/sqli_vulnerable_1.png)
+![img.png](images/sqli/sqli_vulnerable_1.png)
 
 Quand l'utilisateur saisis une recherche similaire à:
 ```shell
@@ -46,7 +100,7 @@ aaa%' UNION ALL (select id, email, roles, password from user where 1=1);--
 ```
 
 On obtient le résultat suivant:
-![img.png](images/sqli_vulnerable_2.png)
+![img.png](images/sqli/sqli_vulnerable_2.png)
 
 On constate que l'utilisateur à la possiblité de récupérer les enregistrements de la table utilisateur et, en plus, les mots de passes ne sont pas chiffrés !
 
@@ -80,8 +134,8 @@ public function searchArticles(string $title): array
 ```
 
 On retourne sur l'application et on essaie de nouveau l'injection SQL:
-![img.png](images/sql_secure_1.png)
+![img.png](images/sqli/sqli_secure_1.png)
 
 Pour vérifier, nous pouvons constater qu'il y a bien des utilisateurs en base données:
-![img.png](images/sqli_secure_2.png)
+![img.png](images/sqli/sqli_secure_2.png)
 ### Command Injection
