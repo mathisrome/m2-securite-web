@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/articles', name: 'articles_')]
@@ -44,6 +45,8 @@ class ArticleController extends AbstractController
     {
         if (empty($article)) {
             $article = new Article();
+        } else {
+            $this->denyAccessUnlessGranted('edit', $article);
         }
         $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
@@ -92,6 +95,8 @@ class ArticleController extends AbstractController
     public function detail(
         Article $article
     ): Response {
+        $this->denyAccessUnlessGranted('view', $article);
+
         return $this->render('article/detail.html.twig', [
             "article" => $article,
         ]);

@@ -139,3 +139,127 @@ On retourne sur l'application et on essaie de nouveau l'injection SQL:
 Pour vérifier, nous pouvons constater qu'il y a bien des utilisateurs en base données:
 ![img.png](images/sqli/sqli_secure_2.png)
 ### Command Injection
+### Access Management
+La vulnérabilité se situe sur la liste, la vue et l'édition d'un article. Un utilisateur peut manipuler l'url pour accéder à l'article d'un autre utilisateur.
+
+L'utilisateur `test@test.com` possède les articles suviants:
+![img.png](images/access_management/access_management_1.png)
+
+Je connecte maintenant avec un autre utilisateur, l'utilisateur `user1@mail.com` qui possède les articles suivants:
+![img.png](images/access_management/access_management_2.png)
+
+En cliquant sur le bouton "Edit", il arrive sur le formulaire d'édition de son article:
+![img.png](images/access_management/access_management_3.png)
+
+En modifiant l'url de la page pour changer l'identifiant de l'article de 4 à 3, on arrive sur la page d'édition d'un article qui l'utilisateur ne possède normalement pas:
+![img.png](images/access_management/access_management_4.png)
+
+L'utilisateur peut maintenant modifier l'article à sa guise et s'en approprier la possession en enregistrant les modifications:
+![img.png](images/access_management/access_management_5.png)
+
+L'article apparaît maintenant dans sa liste. Je me connecte avec le premier utilisateur et on peut constater que l'article n'apparaît plus dans sa liste:
+![img.png](images/access_management/access_management_6.png)
+
+Pour résoudre le problème, nous allons utiliser le système de droit de Symfony en créant un "Voter":
+```php
+<?php
+namespace App\Security\Voters;
+
+use App\Entity\Article;
+use App\Entity\User;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+
+class ArticleVoter extends Voter
+{
+    // On déifnit les constantes que l'on désire
+    const VIEW = 'view';
+    const EDIT = 'edit';
+
+    protected function supports(string $attribute, mixed $subject): bool
+    {
+        // Si l'attribut n'est pas supporté
+        if (!in_array($attribute, [self::VIEW, self::EDIT])) {
+            return false;
+        }
+
+        // On ne contrôle que les objets de type Article
+        if (!$subject instanceof Article) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    {
+        $user = $token->getUser();
+
+        // L'utilisateur doit être connecté
+        if (!$user instanceof User) {
+            return false;
+        }
+
+        /** @var Article $article */
+        $article = $subject;
+
+        return match ($attribute) {
+            self::VIEW => $this->canView($article, $user),
+            self::EDIT => $this->canEdit($article, $user),
+            default => false,
+        };
+    }
+
+    // Logique métier pour vérifier que l'utilisateur peut visualiser l'article
+    private function canView(Article $article, User $user): bool
+    {
+        return $this->canEdit($article, $user);
+    }
+
+    // Logique métier pour vérifier que l'utilisateur peut éditer l'article
+    private function canEdit(?Article $article, User $user): bool
+    {
+        return $article->getUser() === $user || is_null($article);
+    }
+}
+```
+
+On fait appelle au Voter dans les routes nécessaires:
+```php
+#[Route('/{id}/detail', name: 'detail')]
+public function detail(
+    Article $article
+): Response {
+    $this->denyAccessUnlessGranted('view', $article);
+
+    return $this->render('article/detail.html.twig', [
+        "article" => $article,
+    ]);
+}
+
+#[Route('/create', name: 'create')]
+#[Route('/{id}/edit', name: 'edit')]
+public function createOrUpdate(
+    Request $request,
+    EntityManagerInterface $em,
+    SluggerInterface $slugger,
+    #[Autowire('%kernel.project_dir%/public/uploads/images')] string $imagesDirectory,
+    ?Article $article
+): Response
+{
+    if (empty($article)) {
+        $article = new Article();
+    } else {
+        $this->denyAccessUnlessGranted('edit', $article); // Appelle au voter
+    }
+    // ...
+}
+```
+
+On se connecte avec un utilisateur qui possède un seul article ayant l'identifiant 2: \
+![img.png](images/access_management/access_management_7.png)
+
+Et on modifie l'url pour essayer d'accéder à l'article ayant l'identifiant 1: \
+![img.png](images/access_management/access_management_8.png)
+
+L'utilisateur n'ayant pas les droits de lecture et d'édition à cet article, l'application renvoie une AccessDeniedException soit une réponse HTTP 403: Forbidden. 
