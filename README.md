@@ -50,7 +50,7 @@ Dans le champ `description` vous pouvez insérer n'importe quel balise HTML.
 Voici un exemple en ajoutant du code javascript :
 ![img.png](images/xss/xss_vulnerable_1.png)
 
-Une fois qu'on se sur la visualisation de l'article nous avons l'alerte suivante qui apparaît :
+Une fois qu'on se déplace sur la visualisation de l'article nous avons l'alerte suivante qui apparaît :
 ![img.png](images/xss/xss_vulnerable_2.png)
 
 Voici le code associé à la faille XSS :
@@ -81,15 +81,193 @@ $form->add(
 )
 ```
 
-L'option `sanitize_html` permet de vérifier le contenu du champ et supprime le contenu non souhaité, tel que les balises `<scrip></script>` en HTML.
+L'option `sanitize_html` permet de vérifier le contenu du champ et supprime le contenu non souhaité, tel que les balises `<script></script>` en HTML.
 
 Vous trouverez ci-dessous l'exemple du correctif.
 
-1. Création d'un article ![img.png](images/xss/xss_secure_1.png)
+1. Création d'un article sur le lien suivant : [localhost:81/articles/create](http://localhost:81/articles/create) ![img.png](images/xss/xss_secure_1.png)
 2. Édition de l'article pour voir le contenu du champ ![img.png](images/xss/xss_secure_2.png)
 3. Rendu de l'article ![img.png](images/xss/xss_secure_3.png)
 
 ### File Upload
+L'application est vulnérable à l'upload de fichier malveilllant via la création/édition d'un article.
+
+Vous trouverez un fichier d'exemple pour faire vos tests : [file_upload.php](images/file_upload/file_upload_example.php). 
+Ce fichier contient un script `php` retournant les informations sur la version de `php` installée ainsi que le contenu du fichier `.env`.
+
+Voici un exemple avec le fichier donné :
+
+1. Création/édition d'un article sur le lien suivant [localhost:80/articles/create](http://localhost:80/articles/create) et ajouté le fichier dans le champ `image de couverture` ![img.png](images/file_upload/file_upload_vulnerable_1.png)
+2. Une fois de retour sur la liste ouvrez la visualisation de l'article via le bouton détail ![img.png](images/file_upload/file_upload_vulnerable_2.png)
+3. Cliquer sur l'image pour copier le lien de celle-ci ![img.png](images/file_upload/file_upload_vulnerable_3.png)
+4. Ouvrez une nouvelle fenêtre et copier le lien, le fichier sera executé et vous pourrez voir les informations attendues ![img.png](images/file_upload/file_upload_vulnerable_4.png) ![img.png](images/file_upload/file_upload_vulnerable_5.png)
+
+Vous trouverez le code associé à la vulnérabilité ci-dessous : 
+
+```php
+if ($form->isSubmitted() && $form->isValid()) {
+    $article = $form->getData();
+    $article->setUser($this->getUser());
+
+    /** @var UploadedFile $imageFile */
+    $imageFile = $form->get('image')->getData();
+
+    // this condition is needed because the 'brochure' field is not required
+    // so the PDF file must be processed only when a file is uploaded
+    if ($imageFile) {
+        $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+        // this is needed to safely include the file name as part of the URL
+        $safeFilename = $slugger->slug($originalFilename);
+        $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->getClientOriginalExtension();
+
+        // Move the file to the directory where brochures are stored
+        try {
+            $imageFile->move($imagesDirectory, $newFilename);
+        } catch (FileException $e) {
+            // ... handle exception if something happens during file upload
+        }
+
+        // updates the 'brochureFilename' property to store the PDF file name
+        // instead of its contents
+        $article->setImageFilename($newFilename);
+        $article->setOriginalImageFilename($originalFilename);
+    }
+
+    $em->persist($article);
+    $em->flush();
+
+    return $this->redirectToRoute('articles_index');
+}
+```
+
+Le code ci-dessus enregistre le fichier, si il a été uploadé, et déplace le fichier dans le dossier `uploads/images`.
+
+De plus voici notre configuration NGINX actuelle : 
+
+```text
+server {
+    listen       80;
+    server_name  _;
+    root   /var/www/app/public;
+    error_log /var/log/nginx/project_error.log;
+    access_log /var/log/nginx/project_access.log;
+    index  index.php;
+
+    location / {
+          try_files $uri /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+      fastcgi_pass vulnerable-symfony-php:9000;
+      fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+      include fastcgi_params;
+    }
+}
+```
+
+Maintenant passons à la version sécurisé. Nous allons faire exactement les mêmes étapes
+
+1. Création/édition d'un article sur le lien suivant [localhost:80/articles/create](http://localhost:80/articles/create) et ajouté le fichier dans le champ `image de couverture` ![img.png](images/file_upload/file_upload_secure_1.png)
+2. Comme vous pouvez le voir, à l'enregistrement, nous avons une erreur spécifiant que le fichier ajouté n'est pas valide ![img.png](images/file_upload/file_upload_secure_2.png) ajouté donc une vrai image ![img.png](images/file_upload/file_upload_secure_3.png)
+3. Une fois de retour sur la liste ouvrez la visualisation de l'article via le bouton détail ![img.png](images/file_upload/file_upload_secure_4.png)
+4. Et voilà l'image fut ! ![img.png](images/file_upload/file_upload_secure_5.png)
+
+Voici le code corrigé : 
+
+```php
+if ($form->isSubmitted() && $form->isValid()) {
+    $article = $form->getData();
+    $article->setUser($this->getUser());
+
+    /** @var UploadedFile $imageFile */
+    $imageFile = $form->get('image')->getData();
+
+    // this condition is needed because the 'brochure' field is not required
+    // so the PDF file must be processed only when a file is uploaded
+    if ($imageFile) {
+        $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+        // this is needed to safely include the file name as part of the URL
+        $safeFilename = $slugger->slug($originalFilename);
+        $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+
+        // Move the file to the directory where brochures are stored
+        try {
+            $imageFile->move($imagesDirectory, $newFilename);
+        } catch (FileException $e) {
+            // ... handle exception if something happens during file upload
+        }
+
+        // updates the 'brochureFilename' property to store the PDF file name
+        // instead of its contents
+        $article->setImageFilename($newFilename);
+        $article->setOriginalImageFilename($originalFilename);
+    }
+
+    $em->persist($article);
+    $em->flush();
+
+    return $this->redirectToRoute("articles_index");
+}
+
+return $this->render('article/form.html.twig', [
+    'article' => $article,
+    "form" => $form,
+]);
+```
+
+Comme vous pouvez le voir ci-dessus, cette fois nous adaptons le nom du fichier et determinons de nous même l'extension du fichier au lieu de récupérer celle de l'utilisateur.
+De plus dans le formulaire nous avons ajouté une contrainte qui n'existait pas précédemment :
+```php
+$form->add('image', FileType::class, [
+    'label' => 'Image de couverture',
+
+    // unmapped means that this field is not associated to any entity property
+    'mapped' => false,
+
+    // make it optional so you don't have to re-upload the PDF file
+    // every time you edit the Product details
+    'required' => false,
+    'constraints' => [
+        new Image(
+            maxSize: '2M',
+        ),
+    ]
+])
+```
+
+Pour augmenter la sécurité nous avons modifier notre configuration NGINX, pour obliger le serveur à exécuter uniquement le fichier `index.php` dans le dossier `public`.
+Voici le fichier :
+
+```text
+server {
+    listen       80;
+    server_name  _;
+    root   /var/www/app/public;
+    error_log /var/log/nginx/project_error.log;
+    access_log /var/log/nginx/project_access.log;
+    client_max_body_size 500M; # allows file uploads up to 500 megabytes
+
+
+    location / {
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass secure-symfony-php:9000;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        internal;
+    }
+
+    location ~ \.php$ {
+        return 404;
+    }
+}
+```
+
 ### SQLI
 L'application est vulnérable à l'injection SQL dans sa fonctionnalité de "Recherche" des articles: 
 ![img.png](images/sqli/sqli_vulnerable_1.png)
