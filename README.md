@@ -102,6 +102,8 @@ Voici un exemple avec le fichier donné :
 3. Cliquer sur l'image pour copier le lien de celle-ci ![img.png](images/file_upload/file_upload_vulnerable_3.png)
 4. Ouvrez une nouvelle fenêtre et copier le lien, le fichier sera executé et vous pourrez voir les informations attendues ![img.png](images/file_upload/file_upload_vulnerable_4.png) ![img.png](images/file_upload/file_upload_vulnerable_5.png)
 
+La dernière image montre a quel point cette faille est dangereuse. En effet nous pouvons voir les identifiants de notre base de données et n'importe qui peut s'y connecter.
+
 Vous trouverez le code associé à la vulnérabilité ci-dessous : 
 
 ```php
