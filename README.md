@@ -40,6 +40,51 @@ Vous pouvez créer un compte sur chaque application via les liens suivants :
 - [localhost:81/register](http://localhost:81/register)
 
 ### Brute Force
+
+Pour cette vulnérabilité, je vais utiliser le logiciel Burp Suite CE.
+Je commence par me connecter à mon application avec l'Intruder activé pour récupérer les informations de la requête: 
+
+![img.png](images/brute_force/brute_force_2.png)
+
+J'envoie ensuite cette requête à l'intruder:
+
+![img_1.png](images/brute_force/brute_force_3.png)
+
+Je sélectionne une attaque par "Cluster Bomb" et ajoute deux payloads: mon username et le password. 
+
+Dans la partie paylods, je configure des données de tests (saisies manuellement mais il est possible de récupérer des listes en lignes.)
+
+![img_2.png](images/brute_force/brute_force_4.png)
+
+![img_3.png](images/brute_force/brute_force_5.png)
+
+Je démarre ensuite l'attaque:
+
+![img_4.png](images/brute_force/brute_force_6.png)
+
+Toutes les requêtes renvoie un code HTTP 302 - Redirect alors que la combinaison sélectionnée (test@test.com - admin) est la combinaise email/pasword permettant de se connecter.
+
+Notre test de brute force à échoué et après inspection, il semblerait que cela est dû au système d'authentification de Symfony. 
+
+Dans le cas où le brute force aurait fonctionné, nous avions prévue une sécurité en utilisant un rate limiter ou throttler grâce à un bundle Symfony.
+
+Voici la configuration:
+```yaml
+login_throttling:
+    max_attempts: 4
+    interval: '45 seconds'
+```
+
+En reprenant les mêmes étapes que précdemment, je tente une attaque en brute force:
+
+![img_5.png](images/brute_force/brute_force_7.png)
+
+Même comportement, toutes les réponses sont des Redirect alors que la bonne combinaison est présente.
+
+Pour tout de même tester le rate limiter, je tente de me connecter à répétition sur l'application et au bout du 5ème échec, l'application bloque mes tentatives de connexions:
+
+![img_6.png](images/brute_force/brute_force_8.png)
+
 ### Command Injection
 
 Une fois connecté, l'utilisateur à accès à une interface pour exécuter des commandes. Cependant, la version vulnérable ne contrôle pas la saisie
