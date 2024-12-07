@@ -31,6 +31,7 @@ Dans ce projet vous trouverez les failles suivantes :
 - [SQLI](#sqli)
 - [Brute Force](#brute-force) 
 - [Command Injection](#command-injection)
+- [Access Management](#access-management)
 
 Pour reproduire les failles vous devez être connecté !
 
@@ -40,6 +41,80 @@ Vous pouvez créer un compte sur chaque application via les liens suivants :
 
 ### Brute Force
 ### Command Injection
+
+Une fois connecté, l'utilisateur à accès à une interface pour exécuter des commandes. Cependant, la version vulnérable ne contrôle pas la saisie
+de l'utilisateur et lui permet de saisir ce qu'il souhaite: \ 
+![img.png](images/command_injection/cmd_ijc_2.png)
+
+Ici, l'utilisateur a pu saisir la commande `pwd` ce qui lui permet de savoir où il se situe sur le serveur. \ 
+Avec l'exemple suivvant, l'utilisateur récupère le fichier `.env` de l'application ce qui lui permettrait de récupérer des informations sur le serveur de base dedonnées, d'envoie de mail ou une clef API: \
+![img.png](images/command_injection/cmd_ijc_3.png)
+
+Voici le code vulnérable: \
+```php
+if ($form->isSubmitted() && $form->isValid()) {
+    $commande = $form->getData()['commande'];
+
+    $output = shell_exec($commande);
+}
+```
+C'est une simple `shell_exec()` sans vérification du contenu du formulaire. \ 
+
+Pour sécuriser, un contrôle renforcé est effectué en configurant directement les paramètres possibles dans le formulaire Symfony:
+```php
+// src/Form/Type/CommandType
+public function buildForm(FormBuilderInterface $builder, array $options): void
+{
+    $builder
+        ->add('commande', ChoiceType::class, [
+            'label' => 'Commande',
+            'required' => true,
+            'choices' => CommandEnums::toFormChoices(),
+            'expanded' => false,
+            'multiple' => false,
+        ])
+        ->add('submit', SubmitType::class, [])
+    ;
+}
+```
+Les options sont construites à partir d'une classe d'énumération:
+```php
+// src/Constants/Enums/CommandEnums
+enum CommandEnums: string
+{
+    case LIKE_COMMENT = 'Met un like sur chaque commentaire';
+    case ARCHIVE_PRUNE = 'Supprimer les articles archivés';
+
+
+    public static function toFormChoices(): array
+    {
+        return [
+            self::LIKE_COMMENT->value => self::LIKE_COMMENT,
+            self::ARCHIVE_PRUNE->value => self::ARCHIVE_PRUNE,
+        ];
+    }
+
+    public static function toCommand(CommandEnums $commandEnums): string
+    {
+        return match ($commandEnums) {
+            self::LIKE_COMMENT => "app:comment:like",
+            self::ARCHIVE_PRUNE => "app:article:prune",
+            default => throw new Exception("Unknown command enum '{$commandEnums}'"),
+        };
+    }
+}
+```
+
+L'utilisateur ne peut donc plus saisir librement une commande dans un champ input et même si il essaie de manipuler le DOM pour changer les options, la vérification des options du formulaire est appliquée:
+
+![img.png](images/command_injection/cmd_ijc_4.png)
+
+Avec comme résultat:
+
+![img.png](images/command_injection/cmd_ijc_5.png)
+
+L'utilisateur est maintenant limité aux possibilités fournies par l'application. 
+
 ### XSS
 L'application est vulnérable à l'injection XSS dans la création/édition d'un article.
 

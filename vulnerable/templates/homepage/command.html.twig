@@ -3,14 +3,19 @@
 {% block title %}{% endblock %}
 
 {% block body %}
-    Choississez une commande à exécuter parmis la liste suivante:
-    <ul>
-        <li>Calcul des ventes: <b>php bin/console app:total</b></li>
-        <li>Recalcul du stock disponible: <b>php bin/console app:refresh</b></li>
-    </ul>
-    {{ form(form) }}
+    <main class="container pt-5">
+        Choisissez une commande à exécuter parmi la liste suivante :
+        <ul>
+            <li>Supprimer vos articles archivés : <b>php bin/console app:article:prune</b></li>
+        </ul>
 
-    {% if output is not null %}
-        {{ output }}
-    {% endif %}
+        <div class="alert alert-danger">Veillez à correctement saisir le nom des commandes !</div>
+
+        {{ form(form) }}
+
+        {% if output is not null %}
+            {{ output }}
+        {% endif %}
+    </main>
+
 {% endblock %}

@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Article;
-use App\Form\Type\ArticleType;
 use App\Form\Type\CommandType;
 use App\Form\Type\SearchType;
 use App\Repository\ArticleRepository;

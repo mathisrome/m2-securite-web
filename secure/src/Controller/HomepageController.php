@@ -50,7 +50,7 @@ class HomepageController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $commande = $form->getData()['commande'];
 
-            dd($commande);
+            $output = shell_exec(\CommandEnums::toCommand($commande));
         }
 
         return $this->render('homepage/command.html.twig', [

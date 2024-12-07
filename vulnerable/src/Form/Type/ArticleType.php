@@ -4,6 +4,7 @@ namespace App\Form\Type;
 
 use App\Entity\Article;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -40,6 +41,10 @@ class ArticleType extends AbstractType
                     "label" => "Description",
                 ]
             )
+            ->add('archived', CheckboxType::class, [
+                'label' => 'Archiver',
+                'required' => false,
+            ])
             ->add(
                 'submit',
                 SubmitType::class

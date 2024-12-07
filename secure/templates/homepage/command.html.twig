@@ -3,10 +3,15 @@
 {% block title %}{% endblock %}
 
 {% block body %}
-    Choississez une commande à exécuter parmis la liste suivante:
-    {{ form(form) }}
+    <main class="container pt-5">
+        <h1>Exécuter une commande</h1>
+        {{ form(form) }}
 
-    {% if output is not null %}
-        {{ output }}
-    {% endif %}
+        {% if output is not null %}
+            <div class="alert alert-success">
+                {{ output }}
+            </div>
+        {% endif %}
+    </main>
+
 {% endblock %}

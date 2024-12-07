@@ -2,14 +2,24 @@
 
 enum CommandEnums: string
 {
-    case SALE_TOTAL = 'Total des ventes';
-    case REFRESH_STOCK = 'Recalcul des stocks';
+    case LIKE_COMMENT = 'Met un like sur chaque commentaire';
+    case ARCHIVE_PRUNE = 'Supprimer les articles archivés';
+
 
     public static function toFormChoices(): array
     {
         return [
-            self::SALE_TOTAL->value => self::SALE_TOTAL,
-            self::REFRESH_STOCK->value => self::REFRESH_STOCK,
+            self::LIKE_COMMENT->value => self::LIKE_COMMENT,
+            self::ARCHIVE_PRUNE->value => self::ARCHIVE_PRUNE,
         ];
+    }
+
+    public static function toCommand(CommandEnums $commandEnums): string
+    {
+        return match ($commandEnums) {
+            self::LIKE_COMMENT => "app:comment:like",
+            self::ARCHIVE_PRUNE => "app:article:prune",
+            default => throw new Exception("Unknown command enum '{$commandEnums}'"),
+        };
     }
 }
