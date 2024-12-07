@@ -81,6 +81,14 @@ En reprenant les mêmes étapes que précdemment, je tente une attaque en brute 
 
 Même comportement, toutes les réponses sont des Redirect alors que la bonne combinaison est présente.
 
+Dans les sources Symfony:
+
+![img.png](images/brute_force/brute_force_9.png)
+
+![img_1.png](images/brute_force/brute_force_0.png)
+
+Une redirection est toujours crée. 
+
 Pour tout de même tester le rate limiter, je tente de me connecter à répétition sur l'application et au bout du 5ème échec, l'application bloque mes tentatives de connexions:
 
 ![img_6.png](images/brute_force/brute_force_8.png)
